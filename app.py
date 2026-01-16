@@ -4,64 +4,42 @@ import base64
 import pandas as pd
 
 # ==========================================
-# 1. KONFIGURASI HALAMAN (FORCE EXPAND)
+# 1. KONFIGURASI HALAMAN
 # ==========================================
 st.set_page_config(
     page_title="Microstock Metadata AI",
     page_icon="📸",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
 # ==========================================
-# 2. CSS "REVISI EKSTRIM" (AGAR TOMBOL JELAS)
+# 2. CSS TEMA PUTIH BERSIH
 # ==========================================
 st.markdown("""
     <style>
-    /* 1. BACKGROUND PUTIH BERSIH */
+    /* Background Putih */
     .stApp {
         background-color: #FFFFFF;
         color: #111827;
     }
     
-    /* 2. MEMAKSA TOMBOL SIDEBAR JADI BIRU BESAR */
-    /* Ini akan mengubah panah kecil '>' menjadi tombol kotak biru yang jelas */
-    button[kind="header"] {
-        background-color: #2563EB !important; /* Warna Biru Terang */
-        color: white !important; /* Panah Putih */
-        border-radius: 8px !important;
-        border: 2px solid #1D4ED8 !important;
-        width: 3rem !important; /* Ukuran Besar */
-        height: 3rem !important;
-        opacity: 1 !important;
-        z-index: 999999 !important;
-        margin-top: 10px;
-        margin-left: 10px;
-    }
-    
-    /* Hover effect untuk tombol sidebar */
-    button[kind="header"]:hover {
-        background-color: #1D4ED8 !important;
-        transform: scale(1.1);
+    /* Hapus Margin Atas biar Full */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
     }
 
-    /* 3. SIDEBAR STYLING */
-    [data-testid="stSidebar"] {
-        background-color: #F3F4F6;
-        border-right: 2px solid #E5E7EB;
-    }
-    
-    /* 4. HEADER & TEXT */
+    /* Styling Header */
     h1, h2, h3 { color: #111827 !important; font-family: 'Segoe UI', sans-serif; }
     
-    /* 5. TOMBOL UTAMA (PROSES) */
+    /* Tombol Utama */
     .stButton>button {
         background-color: #2563EB;
         color: white;
         font-weight: bold;
         border-radius: 8px;
-        padding: 0.75rem 1rem;
         border: none;
+        padding: 0.8rem;
         width: 100%;
         transition: 0.2s;
     }
@@ -70,16 +48,17 @@ st.markdown("""
         color: white;
     }
 
-    /* 6. INPUT FIELDS (Jelas batasnya) */
+    /* Kotak Input */
     .stTextInput>div>div>input, .stSelectbox>div>div>div, .stTextArea textarea {
-        background-color: white;
+        background-color: #F9FAFB;
         color: #111827;
-        border: 1px solid #9CA3AF;
+        border: 1px solid #D1D5DB;
         border-radius: 6px;
     }
 
-    /* HILANGKAN ELEMENT MENGGANGGU */
+    /* Hapus Elemen Bawaan */
     #MainMenu, footer, header {visibility: hidden;}
+    [data-testid="stSidebar"] {display: none;} /* Paksa Sidebar Hilang */
     </style>
     """, unsafe_allow_html=True)
 
@@ -106,7 +85,8 @@ def parse_ai_response(text):
             elif "DESCRIPTION:" in line: desc = line.replace("DESCRIPTION:", "").strip()
             elif "KEYWORDS:" in line: keys = line.replace("KEYWORDS:", "").strip()
         
-        if not title and "TITLE:" in text: # Fallback parsing
+        # Fallback Logic
+        if not title and "TITLE:" in text:
             parts = text.split("TITLE:")[1].split("DESCRIPTION:")
             title = parts[0].strip()
             if "KEYWORDS:" in parts[1]:
@@ -117,36 +97,37 @@ def parse_ai_response(text):
     return title, desc, keys
 
 # ==========================================
-# 4. SIDEBAR (MENU PENGATURAN)
-# ==========================================
-with st.sidebar:
-    st.header("⚙️ SETTINGS")
-    st.write("Atur target pasar di sini:")
-    
-    platform = st.selectbox("Target Agency:", ("Adobe Stock", "Shutterstock", "Freepik", "Getty Images"))
-    # Hardcode English Output
-    st.markdown("**Output Language:** English (Locked)")
-    
-    st.divider()
-    st.info("ℹ️ **INFO:** Tombol download CSV akan muncul otomatis setelah proses selesai.")
-
-# ==========================================
-# 5. HALAMAN UTAMA
+# 4. HALAMAN UTAMA (SETTINGS DI ATAS)
 # ==========================================
 st.title("📸 Microstock Metadata AI")
 st.write("Generate optimized **Titles, Descriptions, & Keywords** ready for CSV Export.")
 
+# --- AREA SETTINGS (Pindah ke Sini) ---
+with st.container():
+    st.markdown("### ⚙️ Settings")
+    col_set1, col_set2, col_set3 = st.columns(3)
+    
+    with col_set1:
+        platform = st.selectbox("Target Agency:", ("Adobe Stock", "Shutterstock", "Freepik", "Getty Images"))
+    with col_set2:
+        # Output language hardcoded as requested, but visible
+        st.info("Output Language: **English** (Locked)")
+    with col_set3:
+        st.success("Engine: **Llama 4 Scout** (Active)")
+
+st.divider()
+
+# --- AREA UPLOAD ---
 if 'results_data' not in st.session_state:
     st.session_state.results_data = []
 
-# UPLOAD SECTION
 uploaded_files = st.file_uploader(
     "📂 Upload Photos (JPG/PNG, Max 10 Files)", 
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg']
 )
 
-# PROCESS BUTTON
+# --- TOMBOL PROSES ---
 if st.button("🚀 START PROCESS"):
     if not uploaded_files:
         st.warning("⚠️ Please upload images first.")
@@ -192,6 +173,7 @@ if st.button("🚀 START PROCESS"):
                 "Filename": file.name, "Title": p_title, "Description": p_desc, "Keywords": p_keys
             })
             
+            # Tampilkan Hasil
             with st.expander(f"✅ Result: {file.name}", expanded=False):
                 col_img, col_res = st.columns([1, 2])
                 with col_img: st.image(file, use_container_width=True)
@@ -203,9 +185,7 @@ if st.button("🚀 START PROCESS"):
     progress_bar.progress(1.0, text="✅ Done!")
     st.success("Analysis Complete! Download CSV below.")
 
-# ==========================================
-# 6. DOWNLOAD SECTION
-# ==========================================
+# --- AREA DOWNLOAD ---
 if st.session_state.results_data:
     st.divider()
     st.subheader("📥 Export Data")
