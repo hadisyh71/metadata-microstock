@@ -3,160 +3,130 @@ from groq import Groq
 import base64
 
 # ==========================================
-# 1. KONFIGURASI HALAMAN (Wajib Paling Atas)
+# 1. KONFIGURASI HALAMAN
 # ==========================================
 st.set_page_config(
-    page_title="Universal AI - Microstock Engine",
-    page_icon="✨",
+    page_title="Microstock Metadata AI",
+    page_icon="📸",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # ==========================================
-# 2. CSS & STYLING (TEMA ASLI ANDA - 100% SAMA)
+# 2. CSS TEMA PUTIH (CLEAN & PROFESSIONAL)
 # ==========================================
 st.markdown("""
     <style>
-    /* HIDE DEFAULT STREAMLIT ELEMENTS */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    
-    /* MAIN THEME COLORS */
+    /* 1. Paksa Background Putih Bersih */
     .stApp {
-        background-color: #0B0F19;
-        color: #F3F4F6;
+        background-color: #FFFFFF;
+        color: #1F2937; /* Tulisan Hitam Abu Gelap (Enak di mata) */
     }
     
-    /* BUTTON STYLING (GRADIENT) */
+    /* 2. Sidebar Abu-abu Sangat Muda (Biar ada pemisah) */
+    [data-testid="stSidebar"] {
+        background-color: #F9FAFB;
+        border-right: 1px solid #E5E7EB;
+    }
+
+    /* 3. Judul & Header Jelas */
+    h1, h2, h3 {
+        color: #111827 !important; /* Hitam Pekat */
+        font-family: 'Segoe UI', sans-serif;
+    }
+    
+    /* 4. Tombol Biru Profesional (Jelas & Kontras) */
     .stButton>button {
-        background: linear-gradient(90deg, #3B82F6 0%, #8B5CF6 100%);
+        background-color: #2563EB; /* Biru Royal */
         color: white;
-        border-radius: 12px;
+        border-radius: 8px;
         border: none;
+        padding: 12px 24px;
         font-weight: 600;
+        font-size: 16px;
         width: 100%;
-        padding: 10px 0;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-        transition: 0.3s;
+        transition: 0.2s;
     }
     .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-    }
-    
-    /* INPUT & SELECTBOX STYLING */
-    .stTextInput>div>div>input, .stSelectbox>div>div>div {
-        background-color: rgba(255, 255, 255, 0.05);
+        background-color: #1D4ED8; /* Biru lebih gelap saat hover */
         color: white;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
     }
     
-    /* EXPANDER STYLING */
-    .streamlit-expanderHeader {
-        background-color: rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-        color: white !important;
+    /* 5. Kotak Input & Text Area (Biar kelihatan batasnya) */
+    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stTextArea textarea {
+        background-color: #FFFFFF;
+        color: #111827;
+        border: 1px solid #D1D5DB; /* Garis tepi abu-abu */
+        border-radius: 6px;
     }
     
-    /* TEXT AREA STYLING */
-    .stTextArea textarea {
-        background-color: #111827 !important;
-        color: #E5E7EB !important;
-        border: 1px solid #374151;
-    }
-    
-    /* SUCCESS/ERROR BOX STYLING */
-    .stSuccess, .stError, .stInfo, .stWarning {
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        color: white !important;
-        border-radius: 10px;
-    }
-    
-    /* HEADER TEXT */
-    h1, h2, h3 {
-        color: #F3F4F6 !important;
-    }
+    /* 6. Hapus Elemen Pengganggu */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. FUNGSI BACKEND (API KEY DARI SECRETS)
+# 3. FUNGSI BACKEND
 # ==========================================
 def get_groq_client():
-    # Mengambil API Key langsung dari Secrets (Server)
-    # Tidak perlu input manual di web
     try:
+        # Mengambil API Key dari secrets.toml
         api_key = st.secrets["GROQ_API_KEY"]
         return Groq(api_key=api_key)
     except Exception:
-        st.error("⚠️ API Key tidak ditemukan di secrets.toml!")
+        st.error("⚠️ API Key belum dipasang di secrets.toml")
         st.stop()
 
 def encode_image(image_file):
     return base64.b64encode(image_file.getvalue()).decode('utf-8')
 
 # ==========================================
-# 4. SIDEBAR (TAMPILAN KONTROL)
+# 4. SIDEBAR (BERSIH & MINIMALIS)
 # ==========================================
 with st.sidebar:
-    st.title("🌐 PUSAT KONTROL")
-    st.caption("Mode: **Microstock Metadata Specialist**")
+    st.header("⚙️ Pengaturan")
+    
+    # Platform Selection
+    platform = st.selectbox("Target Market:", ("Adobe Stock", "Shutterstock", "Freepik", "Getty Images"))
+    lang = st.selectbox("Bahasa Output:", ("English", "Indonesian"))
     
     st.divider()
-    
-    # Status Koneksi
-    st.success("✅ System Online")
-    st.markdown(f"🤖 **Model:** `Llama 4 Scout`")
-    st.markdown("🔑 **Auth:** `Secure API (Secrets)`")
-    
-    st.divider()
-    
-    st.info("""
-    **Fitur Aktif:**
-    - Auto Title Generator
-    - Description Writer
-    - 50 Keywords Extractor
-    - Platform: Adobe Stock / Shutterstock
-    """)
+    st.caption("Engine: **Llama 4 Scout**")
+    st.info("💡 **Tips:** Upload foto yang jelas agar AI bisa membaca detailnya dengan akurat.")
 
 # ==========================================
-# 5. HALAMAN UTAMA (MAIN UI)
+# 5. HALAMAN UTAMA
 # ==========================================
-st.title("✨ Universal AI Control Center")
-st.subheader("📸 Microstock Metadata Generator")
-
-# Pilihan Platform & Bahasa
-col1, col2 = st.columns([2, 1])
-with col1:
-    platform = st.selectbox("Target Platform:", ("Adobe Stock", "Shutterstock", "Freepik", "Getty Images"))
-with col2:
-    lang = st.selectbox("Output Language:", ("English", "Indonesian", "Spanish"))
+st.title("📸 Microstock Metadata AI")
+st.write("Generate **Judul, Deskripsi, & Keyword** otomatis untuk jualan foto.")
 
 # Area Upload
 uploaded_files = st.file_uploader(
-    "📂 Upload Aset Foto (Max 10 File)", 
+    "📂 Upload Foto Anda di sini (Max 10 File)", 
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg']
 )
 
 # Tombol Eksekusi
-if st.button("🚀 JALANKAN ENGINE", key="run_btn"):
+if st.button("🚀 PROSES FOTO SEKARANG"):
     
     if not uploaded_files:
-        st.warning("⚠️ Mohon upload foto terlebih dahulu.")
+        st.warning("⚠️ Tolong upload foto dulu ya.")
         st.stop()
 
-    # Inisialisasi Client Groq dari Secrets
     client = get_groq_client()
     
-    # Progress Bar
-    progress_bar = st.progress(0, text="Sedang memproses antrean...")
+    # Progress Bar (Warna Biru Default Streamlit)
+    progress_bar = st.progress(0, text="Memulai analisis...")
     
     for i, file in enumerate(uploaded_files):
+        # Update Progress
         current_progress = (i + 1) / len(uploaded_files)
-        progress_bar.progress(current_progress, text=f"Menganalisis: {file.name}")
+        progress_bar.progress(current_progress, text=f"Sedang memproses: {file.name}")
         
+        # Expander Hasil
         with st.expander(f"✅ Hasil Metadata: {file.name}", expanded=True):
             col_img, col_res = st.columns([1, 2])
             
@@ -165,23 +135,21 @@ if st.button("🚀 JALANKAN ENGINE", key="run_btn"):
             
             with col_res:
                 try:
-                    # Encoding Gambar
                     base64_image = encode_image(file)
                     
-                    # Prompt Khusus Microstock
+                    # Prompt Spesifik Microstock
                     prompt = f"""
-                    Analyze this image for {platform}. Language: {lang}.
-                    Output strictly in this format (Plain Text):
+                    Analyze this image for {platform}. Output Language: {lang}.
+                    Output strictly in simple text format (No Markdown Bold):
                     
-                    TITLE: [Commercial SEO title, max 70 chars]
+                    TITLE: [Write a commercial, SEO-friendly title, max 70 chars]
                     
-                    DESCRIPTION: [Detailed description min 15 words]
+                    DESCRIPTION: [Write a detailed description min 15 words]
                     
                     KEYWORDS: [50 keywords, comma separated, sorted by relevance]
                     """
 
-                    # Request ke Llama 4 Scout (Fixed Model)
-                    chat_completion = client.chat.completions.create(
+                    completion = client.chat.completions.create(
                         messages=[
                             {
                                 "role": "user",
@@ -191,15 +159,16 @@ if st.button("🚀 JALANKAN ENGINE", key="run_btn"):
                                 ],
                             }
                         ],
-                        model="meta-llama/llama-4-scout-17b-16e-instruct", # MODEL DIKUNCI
+                        model="meta-llama/llama-4-scout-17b-16e-instruct", # Model Tetap Llama 4 Scout
                         temperature=0.5
                     )
                     
-                    result_text = chat_completion.choices[0].message.content
-                    st.text_area("📋 Copy Hasil:", value=result_text, height=350)
+                    result_text = completion.choices[0].message.content
+                    st.text_area("📋 Copy Hasil di bawah:", value=result_text, height=300)
                     
                 except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                    st.error(f"Gagal memproses gambar ini: {str(e)}")
     
     progress_bar.progress(1.0, text="✅ Selesai!")
-    st.success("Semua file berhasil dianalisis!")
+    st.balloons()
+    st.success("Semua foto berhasil diproses!")
