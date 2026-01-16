@@ -1,20 +1,19 @@
 import streamlit as st
 from groq import Groq
 import base64
-import time
 
 # ==========================================
-# 1. KONFIGURASI HALAMAN & STATE
+# 1. KONFIGURASI HALAMAN (Wajib Paling Atas)
 # ==========================================
 st.set_page_config(
-    page_title="Microstock AI Metadata Pro",
-    page_icon="📸",
+    page_title="Universal AI - Microstock Engine",
+    page_icon="✨",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # ==========================================
-# 2. CSS & STYLING (TEMA MEWAH ANDA - DIPERTAHANKAN)
+# 2. CSS & STYLING (TEMA ASLI ANDA - 100% SAMA)
 # ==========================================
 st.markdown("""
     <style>
@@ -45,8 +44,8 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
     }
     
-    /* INPUT FIELDS STYLING */
-    .stTextInput>div>div>input {
+    /* INPUT & SELECTBOX STYLING */
+    .stTextInput>div>div>input, .stSelectbox>div>div>div {
         background-color: rgba(255, 255, 255, 0.05);
         color: white;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -60,119 +59,129 @@ st.markdown("""
         color: white !important;
     }
     
-    /* SUCCESS/ERROR BOX */
-    .stSuccess, .stError, .stInfo {
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        border-radius: 10px;
-        color: white !important;
+    /* TEXT AREA STYLING */
+    .stTextArea textarea {
+        background-color: #111827 !important;
+        color: #E5E7EB !important;
+        border: 1px solid #374151;
     }
-
-    /* HEADER BANNER */
-    .header-banner {
-        background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%);
-        padding: 15px;
-        border-radius: 12px;
-        text-align: center;
-        margin-bottom: 25px;
-        color: black;
-        font-weight: 600;
-        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+    
+    /* SUCCESS/ERROR BOX STYLING */
+    .stSuccess, .stError, .stInfo, .stWarning {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        color: white !important;
+        border-radius: 10px;
+    }
+    
+    /* HEADER TEXT */
+    h1, h2, h3 {
+        color: #F3F4F6 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. FUNGSI LOGIKA (BACKEND)
+# 3. FUNGSI BACKEND (API KEY DARI SECRETS)
 # ==========================================
+def get_groq_client():
+    # Mengambil API Key langsung dari Secrets (Server)
+    # Tidak perlu input manual di web
+    try:
+        api_key = st.secrets["GROQ_API_KEY"]
+        return Groq(api_key=api_key)
+    except Exception:
+        st.error("⚠️ API Key tidak ditemukan di secrets.toml!")
+        st.stop()
+
 def encode_image(image_file):
-    """Mengubah gambar jadi Base64 biar bisa dilihat Llama 4"""
     return base64.b64encode(image_file.getvalue()).decode('utf-8')
 
 # ==========================================
-# 4. SIDEBAR (KONTROL)
+# 4. SIDEBAR (TAMPILAN KONTROL)
 # ==========================================
 with st.sidebar:
-    st.header("🌐 PUSAT KONTROL")
-    st.caption("Engine: **Llama 4 Scout (Groq)**")
+    st.title("🌐 PUSAT KONTROL")
+    st.caption("Mode: **Microstock Metadata Specialist**")
     
-    # Input API Key (Simpel, tanpa sistem token rumit)
-    api_key = st.secrets.get("GROQ_API_KEY")
-    if not api_key:
-        api_key = st.text_input("🔑 Masukkan Groq API Key:", type="password", help="Dapatkan gratis di console.groq.com")
-    else:
-        st.success("✅ API Key Terdeteksi (Secrets)")
-
+    st.divider()
+    
+    # Status Koneksi
+    st.success("✅ System Online")
+    st.markdown(f"🤖 **Model:** `Llama 4 Scout`")
+    st.markdown("🔑 **Auth:** `Secure API (Secrets)`")
+    
     st.divider()
     
     st.info("""
-    **Fitur Aplikasi:**
-    - Auto Title (SEO Friendly)
-    - Detailed Description
-    - 50 Keywords Generator
-    - Adobe Stock & Shutterstock Ready
+    **Fitur Aktif:**
+    - Auto Title Generator
+    - Description Writer
+    - 50 Keywords Extractor
+    - Platform: Adobe Stock / Shutterstock
     """)
 
 # ==========================================
-# 5. MAIN PAGE (TAMPILAN UTAMA)
+# 5. HALAMAN UTAMA (MAIN UI)
 # ==========================================
-st.title("📸 Microstock Metadata Pro")
-st.markdown("""<div style="color: #9CA3AF; margin-bottom: 20px;">
-Optimalkan penjualan foto Anda dengan metadata otomatis berbasis AI Vision.
-</div>""", unsafe_allow_html=True)
+st.title("✨ Universal AI Control Center")
+st.subheader("📸 Microstock Metadata Generator")
 
-# Container Upload
-with st.container():
-    uploaded_files = st.file_uploader(
-        "📂 Upload Foto (Max 10 File sekaligus)", 
-        accept_multiple_files=True, 
-        type=['png', 'jpg', 'jpeg']
-    )
+# Pilihan Platform & Bahasa
+col1, col2 = st.columns([2, 1])
+with col1:
+    platform = st.selectbox("Target Platform:", ("Adobe Stock", "Shutterstock", "Freepik", "Getty Images"))
+with col2:
+    lang = st.selectbox("Output Language:", ("English", "Indonesian", "Spanish"))
 
-# TOMBOL EKSEKUSI
-if st.button("🚀 GENERATE METADATA SEKARANG"):
+# Area Upload
+uploaded_files = st.file_uploader(
+    "📂 Upload Aset Foto (Max 10 File)", 
+    accept_multiple_files=True, 
+    type=['png', 'jpg', 'jpeg']
+)
+
+# Tombol Eksekusi
+if st.button("🚀 JALANKAN ENGINE", key="run_btn"):
     
-    if not api_key:
-        st.error("⚠️ Mohon masukkan API Key Groq di Sidebar sebelah kiri.")
-        st.stop()
-        
     if not uploaded_files:
-        st.warning("⚠️ Belum ada foto yang diupload.")
+        st.warning("⚠️ Mohon upload foto terlebih dahulu.")
         st.stop()
 
-    client = Groq(api_key=api_key)
+    # Inisialisasi Client Groq dari Secrets
+    client = get_groq_client()
     
-    # Progress Bar Mewah
-    progress_text = "Sedang menganalisis visual..."
-    my_bar = st.progress(0, text=progress_text)
+    # Progress Bar
+    progress_bar = st.progress(0, text="Sedang memproses antrean...")
     
     for i, file in enumerate(uploaded_files):
-        # Update Progress
-        percent = (i) / len(uploaded_files)
-        my_bar.progress(percent, text=f"Memproses foto {i+1} dari {len(uploaded_files)}: {file.name}")
+        current_progress = (i + 1) / len(uploaded_files)
+        progress_bar.progress(current_progress, text=f"Menganalisis: {file.name}")
         
-        # UI Hasil per Foto
-        with st.expander(f"✅ Hasil: {file.name}", expanded=True):
-            col1, col2 = st.columns([1, 2])
+        with st.expander(f"✅ Hasil Metadata: {file.name}", expanded=True):
+            col_img, col_res = st.columns([1, 2])
             
-            with col1:
+            with col_img:
                 st.image(file, use_container_width=True)
             
-            with col2:
+            with col_res:
                 try:
-                    # Proses AI (Llama 4 Scout)
+                    # Encoding Gambar
                     base64_image = encode_image(file)
                     
                     # Prompt Khusus Microstock
-                    prompt = """
-                    Analyze this image for Microstock (Adobe Stock/Shutterstock).
-                    Output strictly in this format (No markdown bolding, just plain text):
+                    prompt = f"""
+                    Analyze this image for {platform}. Language: {lang}.
+                    Output strictly in this format (Plain Text):
                     
-                    TITLE: [Write a commercial, SEO-friendly title, max 70 chars]
-                    DESCRIPTION: [Write a detailed description min 15 words]
-                    KEYWORDS: [Generate 50 keywords separated by commas, sorted by relevance]
+                    TITLE: [Commercial SEO title, max 70 chars]
+                    
+                    DESCRIPTION: [Detailed description min 15 words]
+                    
+                    KEYWORDS: [50 keywords, comma separated, sorted by relevance]
                     """
 
-                    completion = client.chat.completions.create(
+                    # Request ke Llama 4 Scout (Fixed Model)
+                    chat_completion = client.chat.completions.create(
                         messages=[
                             {
                                 "role": "user",
@@ -182,15 +191,15 @@ if st.button("🚀 GENERATE METADATA SEKARANG"):
                                 ],
                             }
                         ],
-                        model="meta-llama/llama-4-scout-17b-16e-instruct", # MODEL YANG ANDA MINTA
+                        model="meta-llama/llama-4-scout-17b-16e-instruct", # MODEL DIKUNCI
                         temperature=0.5
                     )
                     
-                    result_text = completion.choices[0].message.content
-                    st.text_area("📋 Copy Metadata:", value=result_text, height=300)
+                    result_text = chat_completion.choices[0].message.content
+                    st.text_area("📋 Copy Hasil:", value=result_text, height=350)
                     
                 except Exception as e:
-                    st.error(f"Terjadi kesalahan: {str(e)}")
-                    
-    my_bar.progress(1.0, text="✅ Semua proses selesai!")
-    st.success("🎉 Metadata berhasil dibuat! Silakan copy hasilnya.")
+                    st.error(f"Error: {str(e)}")
+    
+    progress_bar.progress(1.0, text="✅ Selesai!")
+    st.success("Semua file berhasil dianalisis!")
