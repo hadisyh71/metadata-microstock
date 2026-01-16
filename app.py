@@ -4,77 +4,87 @@ import base64
 import pandas as pd
 
 # ==========================================
-# 1. PAGE CONFIGURATION (FIXED SIDEBAR)
+# 1. KONFIGURASI HALAMAN (FORCE EXPAND)
 # ==========================================
 st.set_page_config(
     page_title="Microstock Metadata AI",
     page_icon="📸",
     layout="wide",
-    initial_sidebar_state="expanded"  # << FORCE SIDEBAR OPEN DEFAULT
+    initial_sidebar_state="expanded"
 )
 
 # ==========================================
-# 2. CSS STYLING (CLEAN WHITE & VISIBLE BUTTONS)
+# 2. CSS "REVISI EKSTRIM" (AGAR TOMBOL JELAS)
 # ==========================================
 st.markdown("""
     <style>
-    /* 1. Force Clean White Background */
+    /* 1. BACKGROUND PUTIH BERSIH */
     .stApp {
         background-color: #FFFFFF;
         color: #111827;
     }
     
-    /* 2. Sidebar Styling (Light Grey) */
-    [data-testid="stSidebar"] {
-        background-color: #F9FAFB;
-        border-right: 1px solid #E5E7EB;
+    /* 2. MEMAKSA TOMBOL SIDEBAR JADI BIRU BESAR */
+    /* Ini akan mengubah panah kecil '>' menjadi tombol kotak biru yang jelas */
+    button[kind="header"] {
+        background-color: #2563EB !important; /* Warna Biru Terang */
+        color: white !important; /* Panah Putih */
+        border-radius: 8px !important;
+        border: 2px solid #1D4ED8 !important;
+        width: 3rem !important; /* Ukuran Besar */
+        height: 3rem !important;
+        opacity: 1 !important;
+        z-index: 999999 !important;
+        margin-top: 10px;
+        margin-left: 10px;
+    }
+    
+    /* Hover effect untuk tombol sidebar */
+    button[kind="header"]:hover {
+        background-color: #1D4ED8 !important;
+        transform: scale(1.1);
     }
 
-    /* 3. FIX: Make the Sidebar Toggle Button VISIBLE (Black) */
-    [data-testid="collapsedControl"] {
-        color: #000000 !important;
-        background-color: #E5E7EB !important;
-        border-radius: 5px;
-        display: block !important;
+    /* 3. SIDEBAR STYLING */
+    [data-testid="stSidebar"] {
+        background-color: #F3F4F6;
+        border-right: 2px solid #E5E7EB;
     }
     
-    /* 4. Headers & Text */
-    h1, h2, h3 {
-        color: #111827 !important;
-        font-family: 'Segoe UI', sans-serif;
-    }
+    /* 4. HEADER & TEXT */
+    h1, h2, h3 { color: #111827 !important; font-family: 'Segoe UI', sans-serif; }
     
-    /* 5. Professional Blue Buttons */
+    /* 5. TOMBOL UTAMA (PROSES) */
     .stButton>button {
         background-color: #2563EB;
         color: white;
+        font-weight: bold;
         border-radius: 8px;
+        padding: 0.75rem 1rem;
         border: none;
-        padding: 12px 24px;
-        font-weight: 600;
         width: 100%;
         transition: 0.2s;
     }
     .stButton>button:hover {
-        background-color: #1D4ED8;
+        background-color: #1E40AF;
         color: white;
     }
-    
-    /* 6. Inputs & Text Areas */
+
+    /* 6. INPUT FIELDS (Jelas batasnya) */
     .stTextInput>div>div>input, .stSelectbox>div>div>div, .stTextArea textarea {
-        background-color: #FFFFFF;
+        background-color: white;
         color: #111827;
-        border: 1px solid #D1D5DB;
+        border: 1px solid #9CA3AF;
         border-radius: 6px;
     }
-    
-    /* 7. Hide Streamlit Branding */
+
+    /* HILANGKAN ELEMENT MENGGANGGU */
     #MainMenu, footer, header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. BACKEND FUNCTIONS
+# 3. FUNGSI BACKEND
 # ==========================================
 def get_groq_client():
     try:
@@ -88,87 +98,75 @@ def encode_image(image_file):
     return base64.b64encode(image_file.getvalue()).decode('utf-8')
 
 def parse_ai_response(text):
-    """Simple parser to extract data for CSV"""
     title, desc, keys = "", "", ""
     try:
         lines = text.split('\n')
         for line in lines:
-            if line.startswith("TITLE:"):
-                title = line.replace("TITLE:", "").strip()
-            elif line.startswith("DESCRIPTION:"):
-                desc = line.replace("DESCRIPTION:", "").strip()
-            elif line.startswith("KEYWORDS:"):
-                keys = line.replace("KEYWORDS:", "").strip()
+            if "TITLE:" in line: title = line.replace("TITLE:", "").strip()
+            elif "DESCRIPTION:" in line: desc = line.replace("DESCRIPTION:", "").strip()
+            elif "KEYWORDS:" in line: keys = line.replace("KEYWORDS:", "").strip()
         
-        # Fallback if multiline
-        if not title and "TITLE:" in text:
+        if not title and "TITLE:" in text: # Fallback parsing
             parts = text.split("TITLE:")[1].split("DESCRIPTION:")
             title = parts[0].strip()
             if "KEYWORDS:" in parts[1]:
                 d_parts = parts[1].split("KEYWORDS:")
                 desc = d_parts[0].strip()
                 keys = d_parts[1].strip()
-    except:
-        pass
+    except: pass
     return title, desc, keys
 
 # ==========================================
-# 4. SIDEBAR (ENGLISH UI)
+# 4. SIDEBAR (MENU PENGATURAN)
 # ==========================================
 with st.sidebar:
-    st.header("⚙️ Settings")
+    st.header("⚙️ SETTINGS")
+    st.write("Atur target pasar di sini:")
     
     platform = st.selectbox("Target Agency:", ("Adobe Stock", "Shutterstock", "Freepik", "Getty Images"))
-    # Hardcoded to English output as requested
-    st.caption("Output Language: **English (Default)**")
+    # Hardcode English Output
+    st.markdown("**Output Language:** English (Locked)")
     
     st.divider()
-    st.caption("Engine: **Llama 4 Scout**")
-    st.info("ℹ️ **CSV Feature:** Download button will appear after processing.")
+    st.info("ℹ️ **INFO:** Tombol download CSV akan muncul otomatis setelah proses selesai.")
 
 # ==========================================
-# 5. MAIN INTERFACE (ENGLISH UI)
+# 5. HALAMAN UTAMA
 # ==========================================
 st.title("📸 Microstock Metadata AI")
-st.write("Generate optimized **Titles, Descriptions, & Keywords** and export to **CSV**.")
+st.write("Generate optimized **Titles, Descriptions, & Keywords** ready for CSV Export.")
 
-# Upload Area
+if 'results_data' not in st.session_state:
+    st.session_state.results_data = []
+
+# UPLOAD SECTION
 uploaded_files = st.file_uploader(
-    "📂 Upload your photos here (Max 10 Files)", 
+    "📂 Upload Photos (JPG/PNG, Max 10 Files)", 
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg']
 )
 
-# Session State for CSV Data
-if 'results_data' not in st.session_state:
-    st.session_state.results_data = []
-
-# Process Button
-if st.button("🚀 GENERATE METADATA"):
-    
+# PROCESS BUTTON
+if st.button("🚀 START PROCESS"):
     if not uploaded_files:
         st.warning("⚠️ Please upload images first.")
         st.stop()
 
     client = get_groq_client()
-    st.session_state.results_data = [] # Reset previous data
+    st.session_state.results_data = []
     
     progress_bar = st.progress(0, text="Starting analysis...")
     
     for i, file in enumerate(uploaded_files):
         current_progress = (i + 1) / len(uploaded_files)
-        progress_bar.progress(current_progress, text=f"Processing: {file.name}")
+        progress_bar.progress(current_progress, text=f"Analyzing: {file.name}")
         
         try:
             base64_image = encode_image(file)
-            
-            # Prompt forces English Output
             prompt = f"""
-            Analyze this image for {platform}. 
-            Task: Create metadata strictly in English.
-            Output Format (Plain Text only, NO Markdown):
-            
-            TITLE: [Commercial, SEO-friendly title, max 70 chars]
+            Analyze image for {platform}. Task: Metadata for Microstock.
+            Output Format (Plain Text, English Only):
+            TITLE: [Commercial SEO title, max 70 chars]
             DESCRIPTION: [Detailed description, min 15 words]
             KEYWORDS: [50 keywords, comma separated, sorted by relevance]
             """
@@ -188,31 +186,25 @@ if st.button("🚀 GENERATE METADATA"):
             )
             
             result_text = completion.choices[0].message.content
-            
-            # Parse for CSV
             p_title, p_desc, p_keys = parse_ai_response(result_text)
             
             st.session_state.results_data.append({
-                "Filename": file.name,
-                "Title": p_title,
-                "Description": p_desc,
-                "Keywords": p_keys
+                "Filename": file.name, "Title": p_title, "Description": p_desc, "Keywords": p_keys
             })
             
-            # Display Result
             with st.expander(f"✅ Result: {file.name}", expanded=False):
                 col_img, col_res = st.columns([1, 2])
                 with col_img: st.image(file, use_container_width=True)
                 with col_res: st.text_area("Metadata:", value=result_text, height=200)
                 
         except Exception as e:
-            st.error(f"Failed to process {file.name}: {e}")
+            st.error(f"Error: {e}")
 
-    progress_bar.progress(1.0, text="✅ All Done!")
-    st.success("Analysis Complete!")
+    progress_bar.progress(1.0, text="✅ Done!")
+    st.success("Analysis Complete! Download CSV below.")
 
 # ==========================================
-# 6. CSV DOWNLOAD SECTION
+# 6. DOWNLOAD SECTION
 # ==========================================
 if st.session_state.results_data:
     st.divider()
@@ -226,10 +218,10 @@ if st.session_state.results_data:
         st.download_button(
             label="📥 DOWNLOAD CSV FILE",
             data=csv,
-            file_name="microstock_metadata.csv",
+            file_name="metadata_export.csv",
             mime="text/csv",
             type="primary"
         )
     with col2:
-        with st.expander("🔍 Preview Data Table"):
+        with st.expander("🔍 Preview Table"):
             st.dataframe(df)
