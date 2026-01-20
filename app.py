@@ -7,70 +7,118 @@ import pandas as pd
 # 1. KONFIGURASI HALAMAN
 # ==========================================
 st.set_page_config(
-    page_title="Microstock Metadata AI",
-    page_icon="📸",
+    page_title="Microstock AI Pro",
+    page_icon="✨",
     layout="wide"
 )
 
 # ==========================================
-# 2. CSS TEMA PUTIH BERSIH
+# 2. CSS PREMIUM (MODERN SAAS LOOK)
 # ==========================================
 st.markdown("""
     <style>
-    /* Background Putih */
+    /* IMPORT FONT (Inter) */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* BACKGROUND UTAMA (Abu-abu Halus) */
     .stApp {
-        background-color: #FFFFFF;
-        color: #111827;
+        background-color: #F3F4F6;
+        color: #1F2937;
     }
     
-    /* Hapus Margin Atas biar Full */
+    /* HAPUS PADDING ATAS BAWAAN */
     .block-container {
         padding-top: 2rem;
-        padding-bottom: 2rem;
+        padding-bottom: 3rem;
     }
 
-    /* Styling Header */
-    h1, h2, h3 { color: #111827 !important; font-family: 'Segoe UI', sans-serif; }
-    
-    /* Tombol Utama */
-    .stButton>button {
-        background-color: #2563EB;
-        color: white;
-        font-weight: bold;
-        border-radius: 8px;
-        border: none;
-        padding: 0.8rem;
-        width: 100%;
-        transition: 0.2s;
+    /* HEADER STYLE */
+    .main-header {
+        text-align: center;
+        margin-bottom: 2rem;
     }
-    .stButton>button:hover {
-        background-color: #1E40AF;
-        color: white;
-    }
-
-    /* Kotak Input */
-    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stTextArea textarea {
-        background-color: #F9FAFB;
+    .main-header h1 {
         color: #111827;
-        border: 1px solid #D1D5DB;
-        border-radius: 6px;
+        font-weight: 800;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .main-header p {
+        color: #6B7280;
+        font-size: 1.1rem;
     }
 
-    /* Hapus Elemen Bawaan */
+    /* CARD STYLE (KOTAK PUTIH DENGAN SHADOW) */
+    .css-1r6slb0, .stExpander {
+        background-color: #FFFFFF;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border: 1px solid #E5E7EB;
+        padding: 5px;
+        margin-bottom: 1rem;
+    }
+    
+    /* INPUT FIELDS (LEBIH BERSIH) */
+    .stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #D1D5DB !important;
+        border-radius: 8px !important;
+        color: #374151 !important;
+    }
+    
+    /* TOMBOL UTAMA (BIRU GRADASI) */
+    .stButton > button {
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        color: white;
+        font-weight: 700;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 10px;
+        width: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    /* TOMBOL DOWNLOAD (HIJAU SPESIAL) */
+    div[data-testid="stDownloadButton"] > button {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+        color: white !important;
+        border: none !important;
+        font-weight: 700 !important;
+        padding: 1rem !important;
+        border-radius: 10px !important;
+        width: 100% !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    div[data-testid="stDownloadButton"] > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    /* HIDE DEFAULT ELEMENTS */
     #MainMenu, footer, header {visibility: hidden;}
-    [data-testid="stSidebar"] {display: none;} /* Paksa Sidebar Hilang */
+    [data-testid="stSidebar"] {display: none;}
     </style>
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. FUNGSI BACKEND
+# 3. BACKEND FUNCTIONS
 # ==========================================
 def get_groq_client():
     try:
         api_key = st.secrets["GROQ_API_KEY"]
         return Groq(api_key=api_key)
     except Exception:
-        st.error("⚠️ API Key missing in secrets.toml")
+        st.error("⚠️ API Key missing. Please check secrets.toml")
         st.stop()
 
 def encode_image(image_file):
@@ -85,7 +133,6 @@ def parse_ai_response(text):
             elif "DESCRIPTION:" in line: desc = line.replace("DESCRIPTION:", "").strip()
             elif "KEYWORDS:" in line: keys = line.replace("KEYWORDS:", "").strip()
         
-        # Fallback Logic
         if not title and "TITLE:" in text:
             parts = text.split("TITLE:")[1].split("DESCRIPTION:")
             title = parts[0].strip()
@@ -97,55 +144,60 @@ def parse_ai_response(text):
     return title, desc, keys
 
 # ==========================================
-# 4. HALAMAN UTAMA (SETTINGS DI ATAS)
+# 4. MAIN UI STRUCTURE
 # ==========================================
-st.title("📸 Microstock Metadata AI")
-st.write("Generate optimized **Titles, Descriptions, & Keywords** ready for CSV Export.")
 
-# --- AREA SETTINGS (Pindah ke Sini) ---
+# HEADER SECTION
+st.markdown("""
+<div class="main-header">
+    <h1>✨ Microstock Metadata AI</h1>
+    <p>Generate Titles, Descriptions & Keywords instantly with Llama 4 Vision.</p>
+</div>
+""", unsafe_allow_html=True)
+
+# CONTROL BAR (CARD STYLE)
 with st.container():
-    st.markdown("### ⚙️ Settings")
-    col_set1, col_set2, col_set3 = st.columns(3)
-    
-    with col_set1:
-        platform = st.selectbox("Target Agency:", ("Adobe Stock", "Shutterstock", "Freepik", "Getty Images"))
-    with col_set2:
-        # Output language hardcoded as requested, but visible
-        st.info("Output Language: **English** (Locked)")
-    with col_set3:
-        st.success("Engine: **Llama 4 Scout** (Active)")
+    col1, col2, col3 = st.columns([1, 1, 2])
+    with col1:
+        platform = st.selectbox("🎯 Target Agency", ["Adobe Stock", "Shutterstock", "Getty Images", "Freepik"])
+    with col2:
+        st.selectbox("🌐 Output Language", ["English (Default)"], disabled=True)
+    with col3:
+        st.info("💡 **Pro Tip:** Upload high-quality JPGs for best keyword accuracy.")
 
-st.divider()
+st.write("") # Spacer
 
-# --- AREA UPLOAD ---
-if 'results_data' not in st.session_state:
-    st.session_state.results_data = []
-
+# UPLOAD SECTION
 uploaded_files = st.file_uploader(
-    "📂 Upload Photos (JPG/PNG, Max 10 Files)", 
+    "📂 Drop your photos here to start processing (Max 10)", 
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg']
 )
 
-# --- TOMBOL PROSES ---
-if st.button("🚀 START PROCESS"):
+# SESSION STATE
+if 'results_data' not in st.session_state:
+    st.session_state.results_data = []
+
+# START BUTTON
+if st.button("🚀 START AI ANALYSIS"):
     if not uploaded_files:
-        st.warning("⚠️ Please upload images first.")
+        st.warning("⚠️ Please upload at least one image.")
         st.stop()
 
     client = get_groq_client()
     st.session_state.results_data = []
     
-    progress_bar = st.progress(0, text="Starting analysis...")
+    progress_bar = st.progress(0, text="Initializing AI Engine...")
     
+    # PROCESSING LOOP
     for i, file in enumerate(uploaded_files):
         current_progress = (i + 1) / len(uploaded_files)
-        progress_bar.progress(current_progress, text=f"Analyzing: {file.name}")
+        progress_bar.progress(current_progress, text=f"Processing Image {i+1}/{len(uploaded_files)}: {file.name}")
         
         try:
             base64_image = encode_image(file)
             prompt = f"""
-            Analyze image for {platform}. Task: Metadata for Microstock.
+            Analyze image for {platform}. Task: Microstock Metadata.
             Output Format (Plain Text, English Only):
             TITLE: [Commercial SEO title, max 70 chars]
             DESCRIPTION: [Detailed description, min 15 words]
@@ -173,35 +225,40 @@ if st.button("🚀 START PROCESS"):
                 "Filename": file.name, "Title": p_title, "Description": p_desc, "Keywords": p_keys
             })
             
-            # Tampilkan Hasil
-            with st.expander(f"✅ Result: {file.name}", expanded=False):
-                col_img, col_res = st.columns([1, 2])
-                with col_img: st.image(file, use_container_width=True)
-                with col_res: st.text_area("Metadata:", value=result_text, height=200)
-                
+            # --- HASIL (CARD STYLE) ---
+            with st.expander(f"✅ Result: {file.name}", expanded=True):
+                c_img, c_data = st.columns([1, 3])
+                with c_img:
+                    st.image(file, use_container_width=True)
+                with c_data:
+                    st.text_input("Title", value=p_title, key=f"t_{i}")
+                    st.text_area("Description", value=p_desc, height=80, key=f"d_{i}")
+                    st.text_area("Keywords", value=p_keys, height=100, key=f"k_{i}")
+
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"Error processing {file.name}: {e}")
 
-    progress_bar.progress(1.0, text="✅ Done!")
-    st.success("Analysis Complete! Download CSV below.")
+    progress_bar.empty()
+    st.success("🎉 All files processed successfully!")
 
-# --- AREA DOWNLOAD ---
+# DOWNLOAD SECTION (MODERN FOOTER)
 if st.session_state.results_data:
-    st.divider()
-    st.subheader("📥 Export Data")
+    st.markdown("---")
+    st.subheader("📥 Export Your Data")
     
     df = pd.DataFrame(st.session_state.results_data)
     csv = df.to_csv(index=False).encode('utf-8')
     
-    col1, col2 = st.columns([1, 2])
-    with col1:
+    col_dl1, col_dl2 = st.columns([1, 2])
+    with col_dl1:
         st.download_button(
-            label="📥 DOWNLOAD CSV FILE",
+            label="DOWNLOAD CSV FILE NOW",
             data=csv,
-            file_name="metadata_export.csv",
+            file_name="microstock_metadata.csv",
             mime="text/csv",
             type="primary"
         )
-    with col2:
-        with st.expander("🔍 Preview Table"):
+    with col_dl2:
+        st.caption(f"✅ Ready to upload: **{len(df)} files**. Contains Titles, Descriptions, and Keywords.")
+        with st.expander("Show Data Preview"):
             st.dataframe(df)
