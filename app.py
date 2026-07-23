@@ -151,7 +151,7 @@ def parse_ai_response(text):
 st.markdown("""
 <div class="main-header">
     <h1>✨ Microstock Metadata AI</h1>
-    <p>Generate Titles, Descriptions & Keywords instantly with Llama 4 Vision.</p>
+    <p>Generate Titles, Descriptions & Keywords instantly with llama-3.3-70b-versatile.</p>
 </div>
 """, unsafe_allow_html=True)
 
